@@ -2,6 +2,7 @@ from data import load_data, clean_data
 from features import build_features
 from model import train_demand_model
 from simulation import simulate_prices, recommend_price
+import random
 
 import numpy as np
 import pandas as pd

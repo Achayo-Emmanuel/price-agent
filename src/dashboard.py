@@ -56,16 +56,53 @@ with tab2:
     if st.button("Find Opportunities"):
         results = run_batch_pricing(df_feat, top_n=top_n)
 
-        for r in results:
-            st.markdown("---")
-            st.subheader(f"SKU: {r['sku']}")
+    if not results:
+       st.warning("No results found")
+    else:
+        import pandas as pd
 
-            st.metric("Price", round(r["price"], 2))
-            st.metric("Profit", round(r.get("avg_profit", 0), 2))
+        df_results = pd.DataFrame(results)
 
-            st.write("Confidence:", r.get("confidence"))
-            st.write("Risk:", r.get("risk"))
-            st.write("Reason:", r.get("reason"))
+    df_results = df_results[[
+        "sku", "price", "avg_profit", "confidence", "risk"
+    ]]
+
+    df_results.columns = [
+        "SKU", "Recommended Price", "Expected Profit", "Confidence", "Risk"
+    ]
+
+    # Step 2A — Sort by profit
+    df_results = df_results.sort_values(by="Expected Profit", ascending=False)
+    # Step 3A — Highlight top 3
+    st.subheader(" Top Opportunities")
+
+    top3 = df_results.head(3)
+
+    for _, row in top3.iterrows():
+        st.markdown("---")
+        st.subheader(f"SKU: {row['SKU']}")
+
+        col1, col2, col3 = st.columns(3)
+
+        col1.metric("Price", round(row["Recommended Price"], 2))
+        col2.metric("Profit", round(row["Expected Profit"], 2))
+        col3.metric("Decision", row["Decision"])
+
+        st.subheader("📊 All Opportunities")
+        st.dataframe(df_results, use_container_width=True)
+
+    # Step 2B — Add decision signal
+    def decision_signal(row):
+        if row["Confidence"] > 0.7 and row["Risk"] < 0.3:
+            return "🟢 Increase Price"
+        elif row["Risk"] > 0.5:
+            return "🔴 Risky"
+        else:
+            return "🟡 Test Carefully"
+
+    df_results["Decision"] = df_results.apply(decision_signal, axis=1)
+
+    st.dataframe(df_results, use_container_width=True)
 
 
             

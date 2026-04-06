@@ -53,8 +53,8 @@ with tab2:
 
     top_n = st.slider("Number of SKUs", 1, 20, 5)
 
-    if st.button("Find Opportunities"):
-        results = run_batch_pricing(df_feat, top_n=top_n)
+if st.button("Find Opportunities"):
+    results = run_batch_pricing(df_feat, top_n=top_n)
 
     if not results:
        st.warning("No results found")
@@ -63,46 +63,46 @@ with tab2:
 
         df_results = pd.DataFrame(results)
 
-    df_results = df_results[[
-        "sku", "price", "avg_profit", "confidence", "risk"
-    ]]
+        df_results = df_results[[
+            "sku", "price", "avg_profit", "confidence", "risk"
+        ]]
 
-    df_results.columns = [
-        "SKU", "Recommended Price", "Expected Profit", "Confidence", "Risk"
-    ]
+        df_results.columns = [
+            "SKU", "Recommended Price", "Expected Profit", "Confidence", "Risk"
+        ]
 
-    # Step 2A — Sort by profit
-    df_results = df_results.sort_values(by="Expected Profit", ascending=False)
-    # Step 3A — Highlight top 3
-    st.subheader(" Top Opportunities")
+        # Step 2A — Sort by profit
+        df_results = df_results.sort_values(by="Expected Profit", ascending=False)
+        # Step 3A — Highlight top 3
+        st.subheader(" Top Opportunities")
 
-    top3 = df_results.head(3)
+        top3 = df_results.head(3)
 
-    for _, row in top3.iterrows():
-        st.markdown("---")
-        st.subheader(f"SKU: {row['SKU']}")
+        for _, row in top3.iterrows():
+            st.markdown("---")
+            st.subheader(f"SKU: {row['SKU']}")
 
-        col1, col2, col3 = st.columns(3)
+            col1, col2, col3 = st.columns(3)
 
-        col1.metric("Price", round(row["Recommended Price"], 2))
-        col2.metric("Profit", round(row["Expected Profit"], 2))
-        col3.metric("Decision", row["Decision"])
+            col1.metric("Price", round(row["Recommended Price"], 2))
+            col2.metric("Profit", round(row["Expected Profit"], 2))
+            col3.metric("Decision", row["Decision"])
 
-        st.subheader("📊 All Opportunities")
+            st.subheader("📊 All Opportunities")
+            st.dataframe(df_results, use_container_width=True)
+
+        # Step 2B — Add decision signal
+        def decision_signal(row):
+            if row["Confidence"] > 0.7 and row["Risk"] < 0.3:
+                return "🟢 Increase Price"
+            elif row["Risk"] > 0.5:
+                return "🔴 Risky"
+            else:
+                return "🟡 Test Carefully"
+
+        df_results["Decision"] = df_results.apply(decision_signal, axis=1)
+
         st.dataframe(df_results, use_container_width=True)
 
-    # Step 2B — Add decision signal
-    def decision_signal(row):
-        if row["Confidence"] > 0.7 and row["Risk"] < 0.3:
-            return "🟢 Increase Price"
-        elif row["Risk"] > 0.5:
-            return "🔴 Risky"
-        else:
-            return "🟡 Test Carefully"
 
-    df_results["Decision"] = df_results.apply(decision_signal, axis=1)
-
-    st.dataframe(df_results, use_container_width=True)
-
-
-            
+                

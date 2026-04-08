@@ -95,8 +95,8 @@ if st.button("Find Opportunities"):
             with st.spinner("Generating explanation..."):
              explanation = explain_row(row)
 
-st.write("💡 Explanation:")
-st.write(explanation)
+            st.write("💡 Explanation:")
+            st.write(explanation)
 
 
         # Step 2B — Add decision signal
